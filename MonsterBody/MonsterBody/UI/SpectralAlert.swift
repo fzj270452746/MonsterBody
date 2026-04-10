@@ -66,7 +66,6 @@ final class SpectralAlert: SKNode {
         titleNode.verticalAlignmentMode = .center
         titleNode.numberOfLines = 2
         titleNode.preferredMaxLayoutWidth = panelSize.width - 40
-        titleNode.position = CGPoint(x: 0, y: panelSize.height / 2 - 120)
         titleNode.zPosition = 3
         panel.addChild(titleNode)
 
@@ -79,9 +78,11 @@ final class SpectralAlert: SKNode {
         msgNode.verticalAlignmentMode = .center
         msgNode.numberOfLines = 3
         msgNode.preferredMaxLayoutWidth = panelSize.width - 48
-        msgNode.position = CGPoint(x: 0, y: panelSize.height / 2 - 155)
         msgNode.zPosition = 3
         panel.addChild(msgNode)
+
+        // Dynamic stack layout to avoid overlaps on iPad compatibility mode
+        layoutText(icon: icon, titleNode: titleNode, msgNode: msgNode)
 
         // Subview (monster image or custom content)
         if let sub = subview {
@@ -176,6 +177,64 @@ final class SpectralAlert: SKNode {
                 SKAction.fadeOut(withDuration: 0.5),
                 SKAction.removeFromParent()
             ]))
+        }
+    }
+
+    // Dynamically stack title/message and keep a safe gap above the button
+    private func layoutText(icon: SKNode, titleNode: SKLabelNode, msgNode: SKLabelNode) {
+        let iconBounds = icon.calculateAccumulatedFrame()
+        let topLimit = panelSize.height / 2 - 18                   // below glow bar
+        let buttonCenterY = -panelSize.height / 2 + 52              // from buildAlert
+        let buttonTopY = buttonCenterY + 25                         // 50pt button height
+        let requiredGap: CGFloat = 16
+
+        func performStackLayout() {
+            let titleH = max(titleNode.frame.height, 1)
+            let msgH = max(msgNode.frame.height, 1)
+            var cursorY = icon.position.y - iconBounds.height / 2 - 12
+            titleNode.position = CGPoint(x: 0, y: cursorY - titleH / 2)
+            cursorY = titleNode.position.y - titleH / 2 - 8
+            msgNode.position = CGPoint(x: 0, y: cursorY - msgH / 2)
+        }
+
+        // Initial layout with current sizes
+        performStackLayout()
+
+        // Ensure minimum gap above the button
+        func ensureGap() {
+            let msgBottom = msgNode.position.y - msgNode.frame.height / 2
+            let needLift = (buttonTopY + requiredGap) - msgBottom
+            if needLift > 0 {
+                // Try shifting the whole content group upward
+                let currentTopOfIcon = icon.position.y + iconBounds.height / 2
+                let headroom = topLimit - currentTopOfIcon
+                let shift = min(needLift, max(headroom, 0))
+                if shift > 0 {
+                    icon.position.y += shift
+                    titleNode.position.y += shift
+                    msgNode.position.y += shift
+                }
+            }
+        }
+
+        ensureGap()
+
+        // If still overlapping or too tight, reduce message height and re-layout once
+        let msgBottomAfter = msgNode.position.y - msgNode.frame.height / 2
+        if msgBottomAfter < buttonTopY + requiredGap {
+            // Widen wrap to reduce line count and allow unlimited lines
+            msgNode.numberOfLines = 0
+            msgNode.preferredMaxLayoutWidth = panelSize.width - 24
+            // Small font nudge if still tight later
+            performStackLayout()
+            ensureGap()
+            let msgBottomAfter2 = msgNode.position.y - msgNode.frame.height / 2
+            if msgBottomAfter2 < buttonTopY + requiredGap {
+                msgNode.fontSize = max(msgNode.fontSize - 1, 12)
+                titleNode.fontSize = max(titleNode.fontSize - 1, 20)
+                performStackLayout()
+                ensureGap()
+            }
         }
     }
 
