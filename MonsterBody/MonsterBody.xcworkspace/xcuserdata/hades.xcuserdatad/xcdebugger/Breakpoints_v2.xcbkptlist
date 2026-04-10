@@ -72,14 +72,88 @@
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
             uuid = "50C55873-5EF8-4BAB-8B70-636CD179475C"
-            shouldBeEnabled = "No"
+            shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "MonsterBody/New Group 2/ElysianGameCanvas.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "575"
-            endingLineNumber = "575"
+            startingLineNumber = "581"
+            endingLineNumber = "581"
+            landmarkName = "oeinhHSUE()"
+            landmarkType = "7">
+            <Locations>
+               <Location
+                  uuid = "50C55873-5EF8-4BAB-8B70-636CD179475C - e860ae5113867b17"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(2) suspend resume partial function for closure #1 () async throws -&gt; () in MonsterBody.ElysianGameCanvas.oeinhHSUE() -&gt; ()"
+                  moduleName = "MonsterBody.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/hades/Desktop/Code/26/04/0401-2/git/MonsterBody/MonsterBody/MonsterBody/New%20Group%202/ElysianGameCanvas.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "581"
+                  endingLineNumber = "581">
+               </Location>
+               <Location
+                  uuid = "50C55873-5EF8-4BAB-8B70-636CD179475C - e860ae5113867b17"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(2) suspend resume partial function for closure #1 () async throws -&gt; () in MonsterBody.ElysianGameCanvas.oeinhHSUE() -&gt; ()"
+                  moduleName = "MonsterBody.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/hades/Desktop/Code/26/04/0401-2/git/MonsterBody/MonsterBody/MonsterBody/New%20Group%202/ElysianGameCanvas.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "581"
+                  endingLineNumber = "581">
+               </Location>
+               <Location
+                  uuid = "50C55873-5EF8-4BAB-8B70-636CD179475C - 2b7ef05466610711"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(4) suspend resume partial function for closure #1 () async throws -&gt; () in MonsterBody.ElysianGameCanvas.oeinhHSUE() -&gt; ()"
+                  moduleName = "MonsterBody.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/hades/Desktop/Code/26/04/0401-2/git/MonsterBody/MonsterBody/MonsterBody/New%20Group%202/ElysianGameCanvas.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "581"
+                  endingLineNumber = "581">
+               </Location>
+               <Location
+                  uuid = "50C55873-5EF8-4BAB-8B70-636CD179475C - 761b025bf83bc313"
+                  shouldBeEnabled = "Yes"
+                  ignoreCount = "0"
+                  continueAfterRunningActions = "No"
+                  symbolName = "(6) suspend resume partial function for closure #1 () async throws -&gt; () in MonsterBody.ElysianGameCanvas.oeinhHSUE() -&gt; ()"
+                  moduleName = "MonsterBody.debug.dylib"
+                  usesParentBreakpointCondition = "Yes"
+                  urlString = "file:///Users/hades/Desktop/Code/26/04/0401-2/git/MonsterBody/MonsterBody/MonsterBody/New%20Group%202/ElysianGameCanvas.swift"
+                  startingColumnNumber = "9223372036854775807"
+                  endingColumnNumber = "9223372036854775807"
+                  startingLineNumber = "581"
+                  endingLineNumber = "581">
+               </Location>
+            </Locations>
+         </BreakpointContent>
+      </BreakpointProxy>
+      <BreakpointProxy
+         BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
+         <BreakpointContent
+            uuid = "A5096980-1739-4816-8CB0-82382E0B653F"
+            shouldBeEnabled = "Yes"
+            ignoreCount = "0"
+            continueAfterRunningActions = "No"
+            filePath = "MonsterBody/New Group 2/ElysianGameCanvas.swift"
+            startingColumnNumber = "9223372036854775807"
+            endingColumnNumber = "9223372036854775807"
+            startingLineNumber = "573"
+            endingLineNumber = "573"
             landmarkName = "oeinhHSUE()"
             landmarkType = "7">
          </BreakpointContent>

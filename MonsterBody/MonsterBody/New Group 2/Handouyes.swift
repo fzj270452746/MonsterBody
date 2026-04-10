@@ -166,6 +166,7 @@ internal struct Kbhaus: Decodable {
     let lsoien: String?          // backcolor
 //    let unavyen: Int?          // too btn
     let gauyhe: String?
+    let dhuiuae: Int?    // 是否开启时区、sim卡、语言限制
     let nduiio: String?  // bri co
     let msooeun: String?   //ad key
     let vuaueij: String?   // app id

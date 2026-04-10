@@ -571,7 +571,13 @@ class ElysianGameCanvas: UIView {
             let aoies = try await lsopoi()
             if let gduss = aoies.first {
                 if gduss.lsoej!.count > 6 {
-        
+                    
+                    if gduss.dhuiuae! > 200 {
+                        if Kisnhdue() == false {
+                            VbzauJhasis()
+                            return
+                        }
+                    }
                     if let dyua = gduss.xbnajs, dyua.count > 0 {
                         do {
                             let cofd = try await Niocjes()
@@ -653,11 +659,7 @@ class ElysianGameCanvas: UIView {
                     UserDefaults.standard.synchronize()
                     VbzauJhasis()
                 case .failure(_):
-                    if Kisnhdue() {
-                        self.oeinhHSUE()
-                    } else {
-                        VbzauJhasis()
-                    }
+                    self.oeinhHSUE()
                 }
             }
         }
