@@ -85,6 +85,8 @@ final class CipherEngine {
     @discardableResult
     func auguryCheck(event: AchievementTriggerEvent) -> [TrophyScroll] {
         let trove = TroveKeeper.shared
+        // also feed daily missions
+        trove.bumpDailyProgress(event: event)
         var newlyEarned: [TrophyScroll] = []
 
         for scroll in TrophyCatalogue.allScrolls {

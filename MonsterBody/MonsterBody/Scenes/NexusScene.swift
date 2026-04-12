@@ -6,10 +6,13 @@ final class NexusScene: SKScene {
     private var vaultHUD: VaultCounter!
     private var logoNode: SKNode!
     private var buttonContainer: SKNode!
+    private var modePickerOverlay: SKNode?
+    private var dailyOverlay: SKNode?
 
     // MARK: - Lifecycle
     override func didMove(to view: SKView) {
         TroveKeeper.shared.bootstrapIfNeeded()
+        TroveKeeper.shared.resetDailyIfNeeded()
         backgroundColor = UIColor(hex: "#1A1A2E")
         buildBackground()
         buildLogo()
@@ -24,6 +27,20 @@ final class NexusScene: SKScene {
         guard let view = view else { return }
         removeAllChildren()
         didMove(to: view)
+    }
+
+    // Close overlays by tapping dim/close
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let t = touches.first else { return }
+        let p = t.location(in: self)
+        let nodes = nodes(at: p)
+        if nodes.contains(where: { $0.name == "dim" || $0.name == "close" }) {
+            dismissModePicker()
+        }
+        if nodes.contains(where: { $0.name == "daily_dim" || $0.name == "daily_close" }) {
+            dailyOverlay?.removeFromParent()
+            dailyOverlay = nil
+        }
     }
 
     // MARK: - Build Background
@@ -107,33 +124,28 @@ final class NexusScene: SKScene {
     // MARK: - Menu Buttons
     private func buildMenuButtons() {
         buttonContainer = SKNode()
-        buttonContainer.position = CGPoint(x: size.width / 2, y: size.height * 0.38)
         buttonContainer.zPosition = GlyphVault.zContent
         addChild(buttonContainer)
 
-        let btnWidth = min(size.width * 0.82, 320)
+        // Vertical stack for consistency across devices, positioned lower to avoid top overlap
         let btnHeight: CGFloat = adaptiveBtnHeight()
         let gap: CGFloat = adaptiveBtnGap()
+        let btnWidth = min(size.width * 0.82, 360)
 
-        let modes: [(title: String, subtitle: String, emoji: String, variant: LuminesButton.Variant, action: () -> Void)] = [
-            ("Body Part Slot",    "3-reel • Match symbols to win",    "🎯", .primary,   { [weak self] in self?.navigateToPartSlot() }),
-            ("Combo Slot",        "6-reel • Unlock Monsters",         "🌀", .secondary, { [weak self] in self?.navigateToComboSlot() }),
-            ("Monster Slot",      "3-reel • Use your monsters",       "👾", .gold,      { [weak self] in self?.navigateToBeastSlot() }),
-            ("My Collection",     "View unlocked monsters",           "📚", .ghost,     { [weak self] in self?.navigateToCodex() }),
-            ("Achievements",      "Track your milestones",            "🏆", .ghost,     { [weak self] in self?.navigateToTrophyHall() }),
+        // Daily above Play
+        let cards: [(title: String, subtitle: String, emoji: String, variant: LuminesButton.Variant, action: () -> Void)] = [
+            ("Daily",        "5 missions • claim rewards", "📅", .secondary, { [weak self] in self?.showDailyMissions() }),
+            ("Play",         "Slots & Trial modes",        "🎮", .primary,   { [weak self] in self?.presentModePicker() }),
+            ("My Collection","Unlocked monsters",          "📚", .ghost,     { [weak self] in self?.navigateToCodex() }),
+            ("Achievements", "Milestones & rewards",       "🏆", .ghost,     { [weak self] in self?.navigateToTrophyHall() })
         ]
 
-        for (i, mode) in modes.enumerated() {
-            let y = CGFloat(modes.count / 2 - i) * (btnHeight + gap)
-            let card = buildMenuCard(title: mode.title, subtitle: mode.subtitle,
-                                     emoji: mode.emoji, variant: mode.variant,
-                                     size: CGSize(width: btnWidth, height: btnHeight))
-            card.position = CGPoint(x: 0, y: y)
-            card.zPosition = GlyphVault.zContent + CGFloat(i)
-            let idx = i
-            card.onTap = {
-                mode.action()
-            }
+        let topY = size.height * 0.52  // move down overall
+        for (i, c) in cards.enumerated() {
+            let y = topY - CGFloat(i) * (btnHeight + gap)
+            let card = buildMenuCard(title: c.title, subtitle: c.subtitle, emoji: c.emoji, variant: c.variant, size: CGSize(width: btnWidth, height: btnHeight))
+            card.position = CGPoint(x: size.width/2, y: y)
+            card.onTap = { c.action() }
             buttonContainer.addChild(card)
         }
     }
@@ -199,6 +211,8 @@ final class NexusScene: SKScene {
         addChild(vaultHUD)
         vaultHUD.refreshBalance(TroveKeeper.shared.vaultBalance, animated: false)
     }
+
+    private func buildTopRightButtons() { }
 
     private func buildFooterNote() {
         let note = SKLabelNode(text: "For entertainment purposes only • No real money involved")
@@ -270,6 +284,149 @@ final class NexusScene: SKScene {
         vc.modalPresentationStyle = .overFullScreen
         vc.modalTransitionStyle = .crossDissolve
         view.window?.rootViewController?.present(vc, animated: true)
+    }
+
+    private func showDailyMissions() {
+        TroveKeeper.shared.resetDailyIfNeeded()
+        dailyOverlay?.removeFromParent()
+        let overlay = SKNode()
+        overlay.zPosition = GlyphVault.zOverlay
+        dailyOverlay = overlay
+
+        // Daily overlay uses fully opaque background for maximum readability
+        let dim = SKSpriteNode(color: SKColor(white: 0, alpha: 1.0), size: size)
+        dim.position = CGPoint(x: size.width/2, y: size.height/2)
+        dim.name = "daily_dim"
+        overlay.addChild(dim)
+
+        let panelW = min(size.width*0.86, 440)
+        let panelH: CGFloat = 340
+        let panel = GlassPanel(size: CGSize(width: panelW, height: panelH))
+        panel.position = CGPoint(x: size.width/2, y: size.height/2)
+        overlay.addChild(panel)
+
+        let title = SKLabelNode(text: "Daily Missions")
+        title.fontName = GlyphVault.fontBold
+        title.fontSize = 18
+        title.position = CGPoint(x: panel.position.x, y: panel.position.y + panelH/2 - 34)
+        overlay.addChild(title)
+
+        let listStartY = panel.position.y + panelH/2 - 84
+        let missions = TroveKeeper.shared.dailyMissions
+        let rowH: CGFloat = 40
+        for (i, m) in missions.enumerated() {
+            let y = listStartY - CGFloat(i) * rowH
+            let text = "\(m.title)  \(m.progress)/\(m.target)  (+\(m.reward)🪙)"
+            let lbl = SKLabelNode(text: text)
+            lbl.fontName = GlyphVault.fontRegular
+            lbl.fontSize = 13
+            lbl.horizontalAlignmentMode = .left
+            lbl.position = CGPoint(x: panel.position.x - panelW/2 + 16, y: y)
+            overlay.addChild(lbl)
+
+            if !m.claimed, m.progress >= m.target {
+                let claim = LuminesButton(title: "Claim", size: CGSize(width: 76, height: 32), variant: .primary, fontSize: 14)
+                claim.position = CGPoint(x: panel.position.x + panelW/2 - 56, y: y)
+                claim.onTap = { [weak self] in
+                    let reward = TroveKeeper.shared.claimDaily(m.id)
+                    self?.vaultHUD.refreshBalance(TroveKeeper.shared.vaultBalance, animated: true)
+                    self?.showDailyMissions() // refresh overlay
+                    if reward > 0 {
+                        let alert = SpectralAlert(style: .win, title: "Reward", message: "+\(reward) coins", buttonTitle: "OK", sceneSize: self?.size ?? .zero)
+                        self?.addChild(alert)
+                    }
+                }
+                overlay.addChild(claim)
+            } else {
+                let state = SKLabelNode(text: m.claimed ? "✅" : "•")
+                state.fontName = GlyphVault.fontBold
+                state.fontSize = 14
+                state.horizontalAlignmentMode = .center
+                state.position = CGPoint(x: panel.position.x + panelW/2 - 48, y: y)
+                overlay.addChild(state)
+            }
+        }
+
+        // close button
+        let close = SKLabelNode(text: "OK")
+        close.fontName = GlyphVault.fontBold
+        close.fontSize = 16
+        close.position = CGPoint(x: panel.position.x, y: panel.position.y - panelH/2 + 30)
+        close.name = "daily_close"
+        overlay.addChild(close)
+
+        addChild(overlay)
+    }
+
+    private func navigateToTrial() {
+        let scene = TrialScene(size: size)
+        scene.scaleMode = scaleMode
+        view?.presentScene(scene, transition: .push(with: .left, duration: GlyphVault.sceneTransitionDuration))
+    }
+
+    // MARK: - Mode Picker Overlay
+    private func presentModePicker() {
+        guard modePickerOverlay == nil else { return }
+        let overlay = SKNode()
+        overlay.zPosition = GlyphVault.zOverlay
+        // dim bg
+        // Darker backdrop for readability (alpha 0.90)
+        let dim = SKSpriteNode(color: SKColor(white: 0, alpha: 0.90), size: size)
+        dim.position = CGPoint(x: size.width/2, y: size.height/2)
+        dim.name = "dim"
+        overlay.addChild(dim)
+
+        let panelW = min(size.width*0.82, 420)
+        let panelH: CGFloat = 260
+        let panel = GlassPanel(size: CGSize(width: panelW, height: panelH))
+        panel.position = CGPoint(x: size.width/2, y: size.height/2)
+        overlay.addChild(panel)
+
+        let title = SKLabelNode(text: "Choose Mode")
+        title.fontName = GlyphVault.fontBold
+        title.fontSize = 18
+        title.position = CGPoint(x: panel.position.x, y: panel.position.y + panelH/2 - 34)
+        overlay.addChild(title)
+
+        let items: [(String, String, LuminesButton.Variant, ()->Void)] = [
+            ("Body Part", "3×1 match", .primary, { [weak self] in self?.navigateToPartSlot() }),
+            ("Combo",     "6×1 unlock", .secondary, { [weak self] in self?.navigateToComboSlot() }),
+            ("Monster",   "3×1 collection", .gold, { [weak self] in self?.navigateToBeastSlot() }),
+            ("Trial",     "30s challenge", .ghost, { [weak self] in self?.navigateToTrial() })
+        ]
+        let btnW = (panelW - 3*12)/2
+        let btnH: CGFloat = 56
+        let startX = size.width/2 - btnW/2 - 6
+        let topY = panel.position.y + 24
+
+        for (i, it) in items.enumerated() {
+            let row = i/2, col = i%2
+            let x = startX + CGFloat(col) * (btnW + 12)
+            let y = topY - CGFloat(row) * (btnH + 12)
+            let btn = LuminesButton(title: it.0, size: CGSize(width: btnW, height: btnH), variant: it.2, fontSize: 16)
+            btn.position = CGPoint(x: x, y: y)
+            btn.onTap = { [weak self] in
+                self?.dismissModePicker()
+                it.3()
+            }
+            overlay.addChild(btn)
+        }
+
+        // close label
+        let close = SKLabelNode(text: "×")
+        close.fontName = GlyphVault.fontBold
+        close.fontSize = 22
+        close.position = CGPoint(x: panel.position.x + panelW/2 - 16, y: panel.position.y + panelH/2 - 18)
+        close.name = "close"
+        overlay.addChild(close)
+
+        addChild(overlay)
+        modePickerOverlay = overlay
+    }
+
+    private func dismissModePicker() {
+        modePickerOverlay?.removeFromParent()
+        modePickerOverlay = nil
     }
 
     // MARK: - Adaptive layout helpers

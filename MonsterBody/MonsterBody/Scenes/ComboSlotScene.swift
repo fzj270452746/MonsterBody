@@ -220,6 +220,7 @@ final class ComboSlotScene: SKScene {
             }
             CipherEngine.shared.auguryCheck(event: .coinHarvested(amount: reward))
             CipherEngine.shared.auguryCheck(event: .balanceChanged(newBalance: trove.vaultBalance))
+            if #available(iOS 13.0, *) { UINotificationFeedbackGenerator().notificationOccurred(.success) }
 
         case .sixMatchBonus(let reward):
             trove.harvestTokens(reward)
@@ -232,10 +233,12 @@ final class ComboSlotScene: SKScene {
             spawnCelebrationParticles()
             showAlert(style: .win, title: "🎉 Six Match Bonus!",
                       message: "All 6 reels matched!\nYou won \(reward) bonus coins!")
+            if #available(iOS 13.0, *) { UINotificationFeedbackGenerator().notificationOccurred(.success) }
 
         case .noMatch:
             resultLabel.text = "No match. Keep spinning!"
             resultLabel.fontColor = SKColor(white: 1, alpha: 0.5)
+            if #available(iOS 13.0, *) { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.6) }
         }
 
         isSpinning = false

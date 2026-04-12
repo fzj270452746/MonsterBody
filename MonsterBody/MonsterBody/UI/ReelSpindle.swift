@@ -1,5 +1,6 @@
 import SpriteKit
 import UIKit
+import CoreHaptics
 
 // MARK: - ReelSpindle: Single slot reel node
 final class ReelSpindle: SKNode {
@@ -134,6 +135,9 @@ final class ReelSpindle: SKNode {
 
         stripContainer.run(seq) { [weak self] in
             self?.isSpinning = false
+            if #available(iOS 13.0, *) {
+                UIImpactFeedbackGenerator(style: .rigid).impactOccurred(intensity: 0.9)
+            }
             completion?()
         }
     }
@@ -147,6 +151,10 @@ final class ReelSpindle: SKNode {
             SKAction.moveBy(x: 3,  y: 0, duration: 0.04)
         ])
         run(SKAction.repeat(jitter, count: 3))
+
+        if #available(iOS 13.0, *) {
+            UINotificationFeedbackGenerator().notificationOccurred(.success)
+        }
 
         let glow = SKShapeNode(rectOf: CGSize(width: symbolSize.width + 8,
                                               height: symbolSize.height + 8),

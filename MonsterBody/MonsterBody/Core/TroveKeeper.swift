@@ -6,6 +6,97 @@ final class TroveKeeper {
     private let store = UserDefaults.standard
     private init() {}
 
+    // MARK: - Daily missions
+    struct DailyMission: Codable {
+        let id: String
+        let title: String
+        var progress: Int
+        var target: Int
+        var claimed: Bool
+        var reward: Int
+    }
+
+    private var lastDailyResetKey: String { "gv_daily_reset_v1" }
+    private var dailyMissionsKey: String { "gv_daily_missions_v1" }
+
+    var dailyMissions: [DailyMission] {
+        get {
+            guard let data = store.data(forKey: dailyMissionsKey),
+                  let arr = try? JSONDecoder().decode([DailyMission].self, from: data) else { return [] }
+            return arr
+        }
+        set {
+            if let data = try? JSONEncoder().encode(newValue) { store.set(data, forKey: dailyMissionsKey) }
+        }
+    }
+
+    func resetDailyIfNeeded() {
+        let cal = Calendar.current
+        let today = cal.startOfDay(for: Date())
+        if let last = store.object(forKey: lastDailyResetKey) as? Date, cal.isDate(last, inSameDayAs: today) {
+            // Migration: if previous schema had fewer than 5 missions, reseed today
+            if dailyMissions.count < 5 {
+                dailyMissions = [
+                    DailyMission(id: "login",      title: "Log in today",               progress: 0, target: 1,  claimed: false, reward: 100),
+                    DailyMission(id: "spin_20",    title: "Spin any slot 20 times",    progress: 0, target: 20, claimed: false, reward: 150),
+                    DailyMission(id: "combo_1",    title: "Win once in Combo",         progress: 0, target: 1,  claimed: false, reward: 200),
+                    DailyMission(id: "collect_1",  title: "Unlock 1 monster",          progress: 0, target: 1,  claimed: false, reward: 250),
+                    DailyMission(id: "balance_5k", title: "Reach 5,000 coins balance", progress: 0, target: 1,  claimed: false, reward: 200)
+                ]
+                bumpDailyManual(id: "login")
+                store.set(today, forKey: lastDailyResetKey)
+            }
+            return
+        }
+        // five lightweight dailies
+        dailyMissions = [
+            DailyMission(id: "login",      title: "Log in today",               progress: 0, target: 1,  claimed: false, reward: 100),
+            DailyMission(id: "spin_20",    title: "Spin any slot 20 times",    progress: 0, target: 20, claimed: false, reward: 150),
+            DailyMission(id: "combo_1",    title: "Win once in Combo",         progress: 0, target: 1,  claimed: false, reward: 200),
+            DailyMission(id: "collect_1",  title: "Unlock 1 monster",          progress: 0, target: 1,  claimed: false, reward: 250),
+            DailyMission(id: "balance_5k", title: "Reach 5,000 coins balance", progress: 0, target: 1,  claimed: false, reward: 200)
+        ]
+        store.set(today, forKey: lastDailyResetKey)
+        // set login progress
+        bumpDailyManual(id: "login")
+    }
+
+    func bumpDailyProgress(event: AchievementTriggerEvent) {
+        var arr = dailyMissions
+        switch event {
+        case .spinPerformed:
+            if let i = arr.firstIndex(where: { $0.id == "spin_20" }) { arr[i].progress = min(arr[i].progress + 1, arr[i].target) }
+        case .comboWon:
+            if let i = arr.firstIndex(where: { $0.id == "combo_1" }) { arr[i].progress = min(arr[i].progress + 1, arr[i].target) }
+        case .beastEnshrined:
+            if let i = arr.firstIndex(where: { $0.id == "collect_1" }) { arr[i].progress = min(arr[i].progress + 1, arr[i].target) }
+        case .balanceChanged(let newBalance):
+            if newBalance >= 5000, let i = arr.firstIndex(where: { $0.id == "balance_5k" }) { arr[i].progress = arr[i].target }
+        default: break
+        }
+        dailyMissions = arr
+    }
+
+    func bumpDailyManual(id: String) {
+        var arr = dailyMissions
+        if let i = arr.firstIndex(where: { $0.id == id }) {
+            arr[i].progress = min(arr[i].progress + 1, arr[i].target)
+            dailyMissions = arr
+        }
+    }
+
+    func claimDaily(_ id: String) -> Int {
+        var arr = dailyMissions
+        guard let i = arr.firstIndex(where: { $0.id == id }) else { return 0 }
+        var m = arr[i]
+        guard !m.claimed, m.progress >= m.target else { return 0 }
+        m.claimed = true
+        arr[i] = m
+        dailyMissions = arr
+        harvestTokens(m.reward)
+        return m.reward
+    }
+
     // MARK: - Vault Balance
     var vaultBalance: Int {
         get { store.integer(forKey: GlyphVault.persistBalanceKey) }

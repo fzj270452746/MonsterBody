@@ -52,8 +52,9 @@ final class GlassPanel: SKNode {
     init(size: CGSize, cornerRadius: CGFloat = 20) {
         super.init()
         let shape = SKShapeNode(rectOf: size, cornerRadius: cornerRadius)
-        shape.fillColor = SKColor(white: 1, alpha: 0.07)
-        shape.strokeColor = SKColor(white: 1, alpha: 0.18)
+        // Slightly more opaque to ensure modal readability over busy backgrounds
+        shape.fillColor = SKColor(white: 1, alpha: 0.12)
+        shape.strokeColor = SKColor(white: 1, alpha: 0.25)
         shape.lineWidth = 1.5
         shape.zPosition = 0
         addChild(shape)

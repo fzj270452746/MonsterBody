@@ -421,6 +421,7 @@ final class PartSlotScene: SKScene {
                 SKAction.scale(to: 1.0, duration: 0.1)
             ]))
 
+            if #available(iOS 13.0, *) { UINotificationFeedbackGenerator().notificationOccurred(.success) }
             // Achievement checks
             if wager == GlyphVault.maximumWager {
                 trove.hasWonMaxWager = true
@@ -447,10 +448,12 @@ final class PartSlotScene: SKScene {
 
             CipherEngine.shared.auguryCheck(event: .coinHarvested(amount: reward))
             CipherEngine.shared.auguryCheck(event: .balanceChanged(newBalance: trove.vaultBalance))
+            if #available(iOS 13.0, *) { UIImpactFeedbackGenerator(style: .medium).impactOccurred(intensity: 0.8) }
 
         case .noMatch:
             resultLabel.text = "Try again!"
             resultLabel.fontColor = SKColor(white: 1, alpha: 0.5)
+            if #available(iOS 13.0, *) { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.5) }
         }
 
         isSpinning = false

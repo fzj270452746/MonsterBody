@@ -41,13 +41,11 @@ class ViewController: UIViewController {
         skView.ignoresSiblingOrder = true
         skView.showsFPS = false
         skView.showsNodeCount = false
+        if #available(iOS 15.0, *) {
+            skView.preferredFramesPerSecond = 120
+        }
         view.addSubview(skView)
         view.backgroundColor = UIColor(hex: "#1A1A2E")
-        
-        let dhuynq = UIStoryboard(name: "LaunchScreen", bundle: nil).instantiateInitialViewController()
-        dhuynq!.view.tag = 161
-        dhuynq?.view.frame = UIScreen.main.bounds
-        view.addSubview(dhuynq!.view)
     }
 
     private func presentNexus() {

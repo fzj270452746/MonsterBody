@@ -216,10 +216,12 @@ final class BeastSlotScene: SKScene {
                                       message: "\(beast.displayName) × 3!\nYou won \(reward) coins!",
                                       buttonTitle: "Collect \(reward) 🪙", sceneSize: size)
             addChild(alert)
+            if #available(iOS 13.0, *) { UINotificationFeedbackGenerator().notificationOccurred(.success) }
 
         case .noMatch:
             resultLabel.text = "No match. Try again!"
             resultLabel.fontColor = SKColor(white: 1, alpha: 0.5)
+            if #available(iOS 13.0, *) { UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.6) }
         }
 
         isSpinning = false
